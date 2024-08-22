@@ -2,11 +2,12 @@
 #define DACx0501_h
 
 #include "Arduino.h"
-#include "i2c_t3.h"
+#include "Wire.h"
 
 class DACx0501
 {
 	public:
+		DACx0501(TwoWire* I2CBus, uint8_t address); //Invoke with DACx0501(&WireN)
 		DACx0501(uint8_t address);
 		DACx0501();
 		~DACx0501();
@@ -37,6 +38,7 @@ class DACx0501
 		static const uint8_t TRIGGER_LDAC;
 		static const uint8_t TRIGGER_ResetCode;
 		static const float VRefInt;
+		TwoWire *WireBus;
 		uint8_t Address;
 		uint8_t CommandByte;
 		uint16_t ConfigReg;

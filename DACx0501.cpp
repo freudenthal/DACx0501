@@ -23,13 +23,21 @@ const uint8_t DACx0501::TRIGGER_ResetCode = 10;
 
 const float DACx0501::VRefInt = 2.5;
 
+DACx0501::DACx0501(TwoWire* I2CBus, uint8_t I2CAddress)
+{
+	WireBus = I2CBus;
+	Address = I2CAddress;
+}
+
 DACx0501::DACx0501(uint8_t I2CAddress)
 {
+	WireBus = &Wire;
 	Address = I2CAddress;
 }
 
 DACx0501::DACx0501()
 {
+	WireBus = &Wire;
 	Address = DefaultAddress;
 }
 
@@ -51,8 +59,8 @@ void DACx0501::setAddress(uint8_t address)
 bool DACx0501::isConnected()
 {
 	int Status = 5;
-	Wire.beginTransmission(Address);
-	Status = Wire.endTransmission();
+	WireBus->beginTransmission(Address);
+	Status = WireBus->endTransmission();
 	if (Status == 0)
 	{
 		return true;
@@ -121,15 +129,13 @@ void DACx0501::SendI2C()
 	int SendSuccess = 5;
 	while (!MoveOn)
 	{
-		Wire.beginTransmission(Address);
-		Wire.write(CommandByte);
-		Wire.write(TempData.UIntSmallData[1]);
-		Wire.write(TempData.UIntSmallData[0]);
-		SendSuccess = Wire.endTransmission(I2C_STOP, I2CTimeout);
+		WireBus->beginTransmission(Address);
+		WireBus->write(CommandByte);
+		WireBus->write(TempData.UIntSmallData[1]);
+		WireBus->write(TempData.UIntSmallData[0]);
+		SendSuccess = WireBus->endTransmission();
 		if(SendSuccess != 0)
 		{
-			Wire.finish();
-			Wire.resetBus();
 			CurrentAttempt++;
 			if (CurrentAttempt > MaxAttempts)
 			{
@@ -159,16 +165,14 @@ uint16_t DACx0501::ReceiveI2C()
 	int SendSuccess = 5;
 	while (!MoveOn)
 	{
-		Wire.beginTransmission(Address);
-		Wire.write(CommandByte);
-		SendSuccess = Wire.requestFrom(Address, 2, I2C_STOP, I2CTimeout);
-		TempData.UIntSmallData[1] = Wire.readByte();
-		TempData.UIntSmallData[0] = Wire.readByte();
-		Wire.endTransmission(I2C_STOP, I2CTimeout);
+		WireBus->beginTransmission(Address);
+		WireBus->write(CommandByte);
+		WireBus->endTransmission();
+		SendSuccess = WireBus->requestFrom((uint8_t)Address, (uint8_t)2);
+		TempData.UIntSmallData[1] = WireBus->read();
+		TempData.UIntSmallData[0] = WireBus->read();
 		if(SendSuccess != 0)
 		{
-			Wire.finish();
-			Wire.resetBus();
 			CurrentAttempt++;
 			if (CurrentAttempt > MaxAttempts)
 			{
